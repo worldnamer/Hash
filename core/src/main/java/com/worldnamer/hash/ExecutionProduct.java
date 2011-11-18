@@ -3,6 +3,7 @@ package com.worldnamer.hash;
 public class ExecutionProduct {
 	private String protocol;
 	private String plaintext;
+	private ExecutionProduct interior;
 
 	public ExecutionProduct() {
 
@@ -11,6 +12,11 @@ public class ExecutionProduct {
 	public ExecutionProduct(String protocol, String plaintext) {
 		this.protocol = protocol;
 		this.plaintext = plaintext;
+	}
+
+	public ExecutionProduct(String protocol, ExecutionProduct interior) {
+		this.protocol = protocol;
+		this.interior = interior;
 	}
 
 	public String getProtocol() {
@@ -36,20 +42,40 @@ public class ExecutionProduct {
 
 		if (o instanceof ExecutionProduct) {
 			ExecutionProduct product = (ExecutionProduct) o;
-			if (this.protocol == null || product.getProtocol() == null || this.plaintext == null
-					|| product.getPlaintext() == null)
-				return false;
+			if (product.getInterior() != null && this.interior != null) {
+				if (this.protocol != null && product.protocol != null) {
+					if (this.protocol.equals(product.protocol) && this.interior.equals(product.interior)) {
+						return true;
+					}
+				}
+			} else if (product.getInterior() == null && this.interior == null) {
+				if (this.protocol == null || product.protocol == null || this.plaintext == null
+						|| product.plaintext == null)
+					return false;
 
-			if ((product.getProtocol().equals(this.protocol)) && (product.getPlaintext().equals(this.plaintext))) {
-				return true;
+				if ((product.protocol.equals(this.protocol)) && (product.plaintext.equals(this.plaintext))) {
+					return true;
+				}
 			}
 		}
 
 		return false;
 	}
-	
+
+	public void setInterior(ExecutionProduct interior) {
+		this.interior = interior;
+	}
+
+	public ExecutionProduct getInterior() {
+		return interior;
+	}
+
 	@Override
 	public String toString() {
-		return protocol + "(" + plaintext + ")";
+		if (interior != null) {
+			return protocol + "(" + interior.toString() + ")";
+		} else {
+			return protocol + "(" + plaintext + ")";
+		}
 	}
 }

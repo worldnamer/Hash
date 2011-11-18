@@ -29,4 +29,22 @@ public class TestExecutionProduct {
 		String plaintext = UUID.randomUUID().toString();
 		assertEquals(protocol + "(" + plaintext + ")", new ExecutionProduct(protocol, plaintext).toString());
 	}
+	
+	@Test 
+	public void toStringWithInterior() {
+		String protocol = UUID.randomUUID().toString();
+		String plaintext = UUID.randomUUID().toString();
+		ExecutionProduct interiorProduct = new ExecutionProduct(protocol, plaintext);
+		
+		ExecutionProduct exteriorProduct = new ExecutionProduct(protocol, interiorProduct);
+		
+		assertEquals(protocol + "(" + protocol + "(" + plaintext + "))", exteriorProduct.toString());
+	}
+	
+	@Test
+	public void equalsInterior() {
+		ExecutionProduct productA = new ExecutionProduct("md5", new ExecutionProduct("sha1", "t"));
+		ExecutionProduct productB = new ExecutionProduct("md5", new ExecutionProduct("sha1", "t"));
+		assertEquals(productA, productB);
+	}
 }
