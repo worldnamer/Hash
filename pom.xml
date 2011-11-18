@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.worldnamer</groupId>
+	<artifactId>hash</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0</version>
+	<name>hash Master POM</name>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>c5-public-repository</id>
+			<url>http://mvn.carbonfive.com/public</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<profiles>
+		<profile>
+			<id>all</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>    
+			<modules>
+				<module>core</module>
+			</modules>
+		</profile>
+	</profiles>
+</project>  
