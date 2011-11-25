@@ -1,20 +1,43 @@
 package com.worldnamer.hash;
 
+import java.util.*;
+
 public class ExecutionProduct {
 	private String protocol;
 	private String plaintext;
-	private ExecutionProduct interior;
+	private List<ExecutionProduct> interior;
 
 	public ExecutionProduct() {
 
 	}
 
+	static public ExecutionProduct product(String protocol, String text) {
+		return new ExecutionProduct(protocol, text);
+	}
+
+	static public ExecutionProduct product(String protocol, ExecutionProduct interior) {
+		return new ExecutionProduct(protocol, interior);
+	}
+	
+	static public List<ExecutionProduct> productList(ExecutionProduct ... products) {
+		return Arrays.asList(products);
+	}
+
+	static public ExecutionProduct product(String protocol, List<ExecutionProduct> productList) {
+		return new ExecutionProduct(protocol, productList);
+	}
+	
 	public ExecutionProduct(String protocol, String plaintext) {
 		this.protocol = protocol;
 		this.plaintext = plaintext;
 	}
 
 	public ExecutionProduct(String protocol, ExecutionProduct interior) {
+		this.protocol = protocol;
+		this.interior = productList(interior);
+	}
+
+	public ExecutionProduct(String protocol, List<ExecutionProduct> interior) {
 		this.protocol = protocol;
 		this.interior = interior;
 	}
@@ -62,18 +85,31 @@ public class ExecutionProduct {
 		return false;
 	}
 
-	public void setInterior(ExecutionProduct interior) {
+	public void setInterior(List<ExecutionProduct> interior) {
 		this.interior = interior;
 	}
 
-	public ExecutionProduct getInterior() {
+	public List<ExecutionProduct> getInterior() {
 		return interior;
 	}
 
 	@Override
 	public String toString() {
 		if (interior != null) {
-			return protocol + "(" + interior.toString() + ")";
+			String serialized = protocol + "(";
+			
+			for (Iterator<ExecutionProduct> iterator = interior.iterator(); iterator.hasNext(); ) {
+				ExecutionProduct product = iterator.next();
+				if (product != null) {
+					serialized += product.toString();
+				}
+				if (iterator.hasNext()) {
+					serialized += "+";
+				}
+			}
+			serialized += ")";
+			
+			return serialized;
 		} else {
 			return protocol + "(" + plaintext + ")";
 		}

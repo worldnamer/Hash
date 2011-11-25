@@ -1,6 +1,7 @@
 package com.worldnamer.hash;
 
 import static org.junit.Assert.assertEquals;
+import static com.worldnamer.hash.HasherBase.bytesToHex;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -25,11 +26,11 @@ public abstract class TestHasherBase {
 	
 	@Test
 	public void hashEmptyString() throws NoSuchAlgorithmException {
-		assertEquals(empty, hasher.hash(""));
+		assertEquals(empty, bytesToHex(hasher.hash("")));
 	}
 	
 	@Test
 	public void hashPassword() throws NoSuchAlgorithmException {
-		assertEquals(password, hasher.hash("password"));
+		assertEquals(password, bytesToHex(hasher.hash("password")));
 	}
 }

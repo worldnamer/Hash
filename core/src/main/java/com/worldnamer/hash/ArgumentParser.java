@@ -1,68 +1,105 @@
 package com.worldnamer.hash;
 
+import static com.worldnamer.hash.ExecutionProduct.*;
+
+import java.util.*;
+
 public class ArgumentParser {
-	public ExecutionProduct parse(String arguments) {
-		String protocol = "unk";
-		int index = -1;
-		int indexMD5 = -1;
-		int indexSHA1 = -1;
-		int indexSHA256 = -1;
+	private class ArgumentString {
+		String arguments;
+	}
+	
+	private List<ExecutionProduct> process(String protocolWithParens, ArgumentString argstr, ExecutionProduct parent) {
+		String protocol = protocolWithParens.substring(0, protocolWithParens.lastIndexOf('('));
 
-		indexMD5 = arguments.indexOf("md5(");
-		if (indexMD5 != -1) {
-			protocol = "md5";
-			index = indexMD5;
+		ExecutionProduct product = new ExecutionProduct();
+		product.setProtocol(protocol);
+
+		argstr.arguments = argstr.arguments.substring(protocolWithParens.length(), argstr.arguments.length());
+		List<ExecutionProduct> list = newestAlgorithm(argstr, product);
+		product.setInterior(list);
+
+		List<ExecutionProduct> topLevelList = new ArrayList<ExecutionProduct>();
+		topLevelList.add(product);
+
+		ExecutionProduct from = product;
+		List<ExecutionProduct> fromList = list;
+		if (argstr.arguments.startsWith(")")) {
+			argstr.arguments = argstr.arguments.substring(1, argstr.arguments.length());
+			from = parent;
+			fromList = topLevelList;
 		}
-
-		indexSHA1 = arguments.indexOf("sha1(");
-		if (indexSHA1 != -1) {
-			if (indexMD5 != -1) {
-				if (indexSHA1 < indexMD5) {
-					protocol = "sha1";
-					index = indexSHA1;
-				}
-			} else {
-				protocol = "sha1";
-				index = indexSHA1;
+		if (argstr.arguments.startsWith("+")) {
+			while (!argstr.arguments.isEmpty() && !argstr.arguments.startsWith(")")) {
+				argstr.arguments = argstr.arguments.substring(1, argstr.arguments.length());
+				fromList.addAll(newestAlgorithm(argstr, from));
+			}
+			if (!argstr.arguments.isEmpty()) {
+				argstr.arguments = argstr.arguments.substring(1, argstr.arguments.length());
 			}
 		}
+		
+		return topLevelList;
+	}
+	
+	private List<ExecutionProduct> newestAlgorithm(ArgumentString argstr, ExecutionProduct parent) {
+		String md5 = "md5(";
+		String sha1 = "sha1(";
+		String sha256 = "sha256(";
 
-		indexSHA256 = arguments.indexOf("sha256(");
-		if (indexSHA256 != -1) {
-			if (indexMD5 != -1) {
-				if (indexSHA256 < indexMD5) {
-					if (indexSHA1 != -1) {
-						if (indexSHA256 < indexSHA1) {
-							protocol = "sha256";
-							index = indexSHA256;
-						}
-					} else {
-						protocol = "sha256";
-						index = indexSHA256;
-					}
-				}
-			} else {
-				if (indexSHA1 != -1) {
-					if (indexSHA256 < indexSHA1) {
-						protocol = "sha256";
-						index = indexSHA256;
-					}
-				} else {
-					protocol = "sha256";
-					index = indexSHA256;
-				}
-			}
-		}
-
-		if (index == -1)
-			return null;
-
-		String plaintext = arguments.substring(index + protocol.length() + 1, arguments.lastIndexOf(')'));
-		ExecutionProduct product = parse(plaintext);
-		if (product != null) {
-			return new ExecutionProduct(protocol, product);
+		if (argstr.arguments.startsWith(md5)) {
+			return process(md5, argstr, parent);
+		} else if (argstr.arguments.startsWith(sha1)) {
+			return process(sha1, argstr, parent);
+		} else if (argstr.arguments.startsWith(sha256)) {
+			return process(sha256, argstr, parent);
 		} else {
-			return new ExecutionProduct(protocol, plaintext);
+			if (parent == null) {
+				List<ExecutionProduct> list = new ArrayList<ExecutionProduct>();
+				for (String part : argstr.arguments.split("\\+")) {
+					list.add(product("text", part));
+					argstr.arguments = "";
+				}
+				
+				return list;
+			} else {
+				List<ExecutionProduct> list = new ArrayList<ExecutionProduct>();
+				int nextParens = argstr.arguments.indexOf(')');
+				int nextPlus = argstr.arguments.indexOf('+');
+				if (nextPlus != -1 && nextParens != -1 && nextPlus < nextParens) {
+					list.add(product("text", argstr.arguments.substring(0, nextPlus)));
+					argstr.arguments = argstr.arguments.substring(nextPlus, argstr.arguments.length());
+				} else if (nextParens == -1) {
+					list.add(product("text", argstr.arguments));
+					argstr.arguments = "";
+				} else {
+					list.add(product("text", argstr.arguments.substring(0, nextParens)));
+					argstr.arguments = argstr.arguments.substring(nextParens, argstr.arguments.length());
+				}
+				
+				return list;
+			}
 		}
+	}
+
+	public List<ExecutionProduct> parse(String arguments) {
+		ArgumentString argstr = new ArgumentString();
+		argstr.arguments = arguments;
+		
+		List<ExecutionProduct> list = newestAlgorithm(argstr, null);
+		
+		while (!argstr.arguments.equals("")) {
+			if (argstr.arguments.startsWith(")")) {
+				argstr.arguments = argstr.arguments.substring(1, argstr.arguments.length());
+			}
+			if (argstr.arguments.startsWith("+")) {
+				argstr.arguments = argstr.arguments.substring(1, argstr.arguments.length());
+			}
+			if (!argstr.arguments.equals("")) {
+				list.addAll(newestAlgorithm(argstr, null));
+			}
+		}
+		
+		return list;
 	}
 }

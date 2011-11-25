@@ -1,6 +1,7 @@
 package com.worldnamer.hash;
 
 import java.security.*;
+import java.util.List;
 
 public abstract class HasherBase implements Hasher {
 	private String protocol;
@@ -22,11 +23,24 @@ public abstract class HasherBase implements Hasher {
 	}
 	
 	@Override
-	public String hash(String toHash) throws NoSuchAlgorithmException {
+	public byte[] hash(String toHash) throws NoSuchAlgorithmException {
 		MessageDigest digest;
 		digest = MessageDigest.getInstance(protocol);
+		
 		digest.update(toHash.getBytes());
-		byte[] hash = digest.digest();
-		return bytesToHex(hash);
+		
+		return digest.digest();
+	}
+	
+	@Override
+	public byte[] hash(List<byte[]> forHashing) throws NoSuchAlgorithmException {
+		MessageDigest digest;
+		digest = MessageDigest.getInstance(protocol);
+		
+		for (byte[] toHash : forHashing) {
+			digest.update(toHash);
+		}
+		
+		return digest.digest();
 	}
 }

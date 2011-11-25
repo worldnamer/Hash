@@ -1,6 +1,9 @@
 package com.worldnamer.hash;
 
+import static com.worldnamer.hash.HasherBase.bytesToHex;
+
 import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 public class HashExecutor {
 	private Hasher md5;
@@ -13,7 +16,7 @@ public class HashExecutor {
 		this.sha256 = sha256;
 	}
 
-	public String execute(ExecutionProduct product) throws NoSuchAlgorithmException {
+	public byte[] executeBytes(ExecutionProduct product) throws NoSuchAlgorithmException {
 		Hasher hasher = null;
 		if ("md5".equals(product.getProtocol())) {
 			hasher = md5;
@@ -25,12 +28,35 @@ public class HashExecutor {
 		
 		if (hasher != null) {
 			if (product.getInterior() != null) {
-				return hasher.hash(execute(product.getInterior()));
+				List<byte[]> interiorHashes = new ArrayList<byte[]>();
+				for (ExecutionProduct interiorProduct : product.getInterior()) {
+					interiorHashes.add(executeBytes(interiorProduct));
+				}
+				
+				return hasher.hash(interiorHashes);
 			} else {
 				return hasher.hash(product.getPlaintext());
 			}
 		} else {
-			return null;
+			return product.getPlaintext().getBytes();
 		}
+	}
+
+	public String execute(ExecutionProduct product) throws NoSuchAlgorithmException {
+		return new String(executeBytes(product));
+	}
+	
+	public String execute(List<ExecutionProduct> products) throws NoSuchAlgorithmException {
+		String hash = "";
+		
+		for (ExecutionProduct product : products) {
+			if (product.getProtocol().equals("text")) {
+				hash += new String(executeBytes(product));
+			} else {
+				hash += bytesToHex(executeBytes(product));
+			}
+		}
+		
+		return hash;
 	}
 }
